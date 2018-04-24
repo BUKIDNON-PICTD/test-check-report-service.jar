@@ -1,0 +1,142 @@
+import com.rameses.annotations.*;
+import com.rameses.common.*;
+import com.rameses.util.*;
+import com.rameses.services.extended.*;
+import java.rmi.server.UID;
+
+/* 
+	This interceptor posts to the cashbook after post. 
+	It also reverses the entry during void 
+*/
+class RunningBalanceInterceptor { 
+
+	@Service("RunningBalancePostService")
+	def RBPostSvc;
+
+	@Service("EstRunningBalancePostService")
+	def EstRBPostSvc;
+
+	@Service("DateService")
+	def dateSvc;
+
+	//@After(pattern="TestchequedataentryReportService.updateVoucher", index=-10)
+	//public void postCheckRb( evt ) { 
+	//	def p = evt.args[0];
+
+		//println p;
+		
+		//def accountTest = p.items.findAll{ !it.item?.checkaccountid };
+		//println accountTest;
+		//if( accountTest ) {
+		//	String msg = accountTest*.item?.title.join(",");
+		//	throw new Exception("The following items must have a fund: \n" + msg);
+		//} 
+
+		//summarize receipts by fund, locate the fund and update 
+		//def z = p.items.groupBy{ it.item.checkaccountid }
+		
+		//def entry = [:]
+		//entry.refid = p.objid;
+		//entry.refno = p.checknumber;
+		//entry.refdate = p.checkdate;
+		//entry.amount = p.checkamt;
+		//entry.accountid = p.checkaccountid
+		//entry.accountname = p.checkaccount 
+
+		//println entry
+
+		//RBPostSvc.postCREDIT( entry ); 
+	//}
+
+	@After(pattern="PersistenceService.(create)", eval="#{args[0]._schemaname == 'checkmain' }" ) 
+	public void postCheckPrintRb( def evt ) {
+		def r = evt.result;
+
+		def entry = [:]
+		entry.refid = r.objid;
+		entry.refno = r.checknumber;
+		entry.refdate = r.checkdate;
+		entry.amount = r.checkamt;
+		entry.accountid = r.checkaccountid
+		entry.accountname = r.checkaccount 
+		
+		EstRBPostSvc.postCheck( entry );
+
+	}
+
+	@After(pattern="PersistenceService.(create)", eval="#{args[0]._schemaname == 'checknoncheque' }" ) 
+	public void postNonCheckRb( def evt ) {
+		def r = evt.result;
+
+		def entry = [:]
+		entry.refid = r.objid;
+		entry.refno = r.rjevno;
+		entry.refdate = r.createdby_date;
+		entry.cramount = r.credit;
+		entry.dramount = r.debit;
+		entry.accountid = r.checkaccountid
+		entry.accountname = r.checkaccount 
+		
+		RBPostSvc.postNonCheck( entry );
+
+	}
+
+	@After(pattern="PersistenceService.(create)", eval="#{args[0]._schemaname == 'ada' }" ) 
+	public void postAdaRb( def evt ) {
+		def r = evt.result;
+
+		def entry = [:]
+		entry.refid = r.objid;
+		entry.refno = r.controlno;
+		entry.refdate = r.txndate;
+		entry.amount = r.adaamt;
+		entry.particulars = r.particulars;
+		entry.accountid = r.checkaccountid
+		entry.accountname = r.checkaccount 
+		
+		EstRBPostSvc.postAda( entry );
+
+	}
+
+	@After(pattern="PersistenceService.(create)", eval="#{args[0]._schemaname == 'tisoped' }" ) 
+	public void postDepRb( def evt ) {
+		def r = evt.result;
+
+		def entry = [:]
+		entry.refid = r.objid;
+		entry.refno = r.voucherno;
+		entry.refdate = r.txndate;
+		entry.amount = r.depamt;
+		entry.accountid = r.checkaccountid
+		entry.accountname = r.checkaccount 
+		
+		EstRBPostSvc.postDep( entry );
+
+	}
+
+	//@After(pattern="CreditMemoService.create", index=0)
+	//public void postCreditMemoRb( def evt ) { 
+	//	def dc = evt.args[0];
+
+		//println dc
+
+	//	def entry = [:]
+	//	entry.refid = dc.objid;
+	//	entry.refno = dc.controlno;
+	//	entry.refdate = dc.refdate;
+	//	entry.amount = dc.amount;
+
+	//	def r = EstRBPostSvc.compareBankaccounts(dc.bankaccount.code)
+
+	//	entry.accountid = r.objid
+	//	entry.accountname = r.accountname 
+
+		//println entry
+		
+	//	EstRBPostSvc.postDep( entry );
+	//	}
+		
+
+
+	 
+}

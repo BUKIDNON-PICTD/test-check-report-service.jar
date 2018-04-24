@@ -1,0 +1,192 @@
+import com.rameses.annotations.*
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+
+class TestchequedataentryReportService
+{
+    @ActiveDB(value='testcheckreports', em='testchequedataentry')
+    def em
+
+    @ActiveDB(value='testcheckreports', em='main')
+    def emmain
+
+    @Service('NumberService')
+    def numberSvc
+
+    @Env 
+    def env 
+        
+    @ProxyMethod
+    public def getCheckbyFund(params) {
+
+        
+
+        //println params.checkacct
+        def checkaccountid = (params.checkacct ? params.checkacct.checkaccountid : '%')
+        
+
+        def list = em.getCheckbyFund([checkaccountid:checkaccountid, objid: params.transmittalnum.objid])
+        if (!list) throw new Exception('There are no records found.')
+      
+        def p = [
+            TITLE    : 'List of Transmitted Checks by Account/Fund',
+            //SUBTITLE : subtitle,
+            TRID : (params.transmittalnum ?  params.transmittalnum.transmittalnum : "ALL"), 
+            ACCT :(params.checkacct ?  params.checkacct.checkaccount : "ALL"),
+            
+        ]
+
+        return [
+            parameters  : p,
+            reportdata  : list
+        ]
+    }
+
+    @ProxyMethod
+    public def getCheckReportbyFund(params) {
+
+        
+
+        //println params.checkreportacct
+        def accountid = (params.checkreportacct ? params.checkreportacct.accountid : '%')
+
+        //println "*****"
+        //println accountid
+        
+
+        def list = em.getCheckReportbyFund([accountid:params.checkreportacct.accountid, datefrom:params.datefrom, dateto:params.dateto])
+        //println list
+        if (!list) throw new Exception('There are no records found.')
+      
+        def p = [
+            TITLE    : 'Report of Checks Issued',
+            //SUBTITLE : subtitle,
+            DATEFROM : (params.datefrom),
+            DATETO : (params.dateto),  
+            ACCT :(params.checkreportacct.accountname ?  params.checkreportacct.accountname : "ALL"),
+            BEGBAL:(list[0].debit==0? list[0].credit + list[0].runbalance : list[0].runbalance - list[0].debit)
+            
+        ]
+
+        return [
+            parameters  : p,
+            reportdata  : list
+        ]
+    }
+
+    @ProxyMethod
+    public def getCheckReportCashbookbyFund(params) {
+
+        
+
+        //println params.checkreportacct
+        def accountid = (params.checkreportacct ? params.checkreportacct.accountid : '%')
+
+        //println "*****"
+        //println accountid
+        
+
+        def list = em.getCheckReportCashbookbyFund([accountid:params.checkreportacct.accountid, datefrom:params.datefrom, dateto:params.dateto])
+        //println list
+        if (!list) throw new Exception('There are no records found.')
+      
+        def p = [
+            TITLE    : 'CASHBOOK',
+            //SUBTITLE : subtitle,
+            DATEFROM : (params.datefrom),
+            DATETO : (params.dateto),  
+            ACCT :(params.checkreportacct.accountname ?  params.checkreportacct.accountname : "ALL"),
+            BEGBAL:(list[0].debit==0? list[0].credit + list[0].runbalance : list[0].runbalance - list[0].debit)
+            
+        ]
+
+        return [
+            parameters  : p,
+            reportdata  : list
+        ]
+    }
+
+
+    @ProxyMethod
+    public def getCheckaccount(o) {
+        //println o
+        return em.getCheckaccount([objid:o.objid]);
+
+    }
+
+    @ProxyMethod
+    public def getCheckReportaccount(o) {
+        return em.getCheckReportaccount();
+
+    }
+
+    @ProxyMethod
+    public def getTransmittalnum() {
+        return em.getTransmittalnum();
+    }
+
+    @ProxyMethod
+    public def getCheckList(params){
+        if (params.searchtext == null) {
+            params.searchtext = '';
+        }
+        params.searchtext += '%';
+        return em.getCheckList(params);
+    }
+
+    @ProxyMethod
+    public def getNonCheckList(params){
+        if (params.searchtext == null) {
+            params.searchtext = '';
+        }
+        params.searchtext += '%';
+        return em.getNonCheckList(params);
+    }
+
+    @ProxyMethod
+    public def voucherValidation(entity){
+        //println "=" *50
+        //println entity
+        
+        
+        if (em.getVoucherno(entity)){
+            return false;
+        }
+        else{
+            em.updateVoucherno(entity)
+        }
+        return true;
+        
+    }
+
+
+    @ProxyMethod
+    public def updateVoucher(entity){
+        
+        return em.updateVoucherno(entity)
+
+   } 
+
+   @ProxyMethod
+    public def updateNcVoucherno(entity){
+        
+        return em.updateNcVoucherno(entity)
+
+   }
+
+   @ProxyMethod
+   public def validateAccountBeforeSave(o){
+        //println o
+        return em.getVerifyAccount([accountid:o.accountid])
+        
+   } 
+
+   @ProxyMethod
+   public def getAmountPerAccount(o){
+        //println o
+        return em.findAmountPerAccount([objid:o])
+        
+   } 
+
+
+}
