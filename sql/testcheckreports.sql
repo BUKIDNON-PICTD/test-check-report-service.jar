@@ -82,9 +82,10 @@ WHERE payee LIKE $P{searchtext}
 OR checknumber LIKE $P{searchtext}
 
 [getNonCheckList]
-SELECT objid, txndate, particulars, controlno, adaamt, rjevno, voucherno, checkaccount, checkaccountid
+SELECT objid, txndate, people, particulars, controlno, adaamt, rjevno, voucherno, checkaccount, checkaccountid
 FROM ada 
-WHERE particulars LIKE $P{searchtext}
+WHERE people LIKE $P{searchtext}
+OR particulars LIKE $P{searchtext}
 OR controlno LIKE $P{searchtext}
 
 [updateVoucherno]
